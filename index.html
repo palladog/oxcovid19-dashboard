@@ -9,12 +9,15 @@
     <!-- Mandatory Mapbox GL JS files-->
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.1.1/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.1.1/mapbox-gl.js"></script>
-
 </head>
 <body>
     <div id="map"></div>
-
+    <div id="console">
+        <h1>COVID-19 Deaths in Sweden</h1>
+        <p>Data: <a href="https://covid19.eng.ox.ac.uk/database.html">Number of deaths (cumulative)</a> in Swedish regions on [YYYY-MM-DD].</p>
+    </div>
     <script type="text/javascript" src="js/config.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script type="text/javascript" src="js/main.js"></script>
 </body>
 </html>
