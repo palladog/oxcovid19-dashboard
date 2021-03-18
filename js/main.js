@@ -51,7 +51,7 @@ function postGISQueryToGeoJSONObject (queryResponse) {
     return geojson;
 }
 
-axios.get('https://data.splitgraph.com/splitgraph/oxcovid19/latest/-/rest/administrative_division?and=(countrycode.eq.SWE,adm_level.eq.1)')
+axios.get('https://data.splitgraph.com/splitgraph/oxcovid19/latest/-/rest/administrative_division?and=(countrycode.eq.SWE,adm_level.eq.1)&select=country%2Cadm_area_1%2Cgeometry')
     .then(response => {
         console.log(response.data);
 
