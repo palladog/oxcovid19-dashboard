@@ -1,4 +1,5 @@
 // TO MAKE THE MAP APPEAR YOU MUST
 // ADD YOUR ACCESS TOKEN FROM
 // https://account.mapbox.com
-const mapBoxToken = '<your access token here>';
+const mapBoxToken = '<your access token here>'
+const BASE_URL = '<your base URL here, e.g. http://localhost:8080>'

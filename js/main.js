@@ -5,8 +5,6 @@ const regionSelect = document.getElementById('region-select')
 const dataSelect = document.getElementById('data-select')
 const dateSelect = document.getElementById('date-select')
 
-const BASEADDRESS = 'http://localhost:5000'
-
 let lineChartOpts = {
     type: 'bar',
     data: {
@@ -153,7 +151,7 @@ map.on('moveend', async function () {
 // Populating Select Options
 // queries the API to get regions
 async function populateRegionSelect (country) {
-    let url = `${BASEADDRESS}/api/v1/getallregions?country=${country}`
+    let url = `${BASE_URL}/api/v1/getallregions?country=${country}`
 
     let res = await axios.get(url)
 
@@ -247,13 +245,13 @@ function queryResponseToFeatureCollection (queryResponse) {
 
 // Fetches values of one table column for all regions within the bounding box
 async function getMapData () {
-    let url = `${BASEADDRESS}/api/v1/getmapdata?xmin=${xmin}&ymin=${ymin}&xmax=${xmax}&ymax=${ymax}&srid=${srid}&table=${table}&column=${column}&date=${date}`
+    let url = `${BASE_URL}/api/v1/getmapdata?xmin=${xmin}&ymin=${ymin}&xmax=${xmax}&ymax=${ymax}&srid=${srid}&table=${table}&column=${column}&date=${date}`
     let res = await axios.get(url)
     return res.data
 }
 
 async function getRegionData () {
-    let url = `${BASEADDRESS}/api/v1/getregiondata?table=${table}&column=${column}&date=${date}&region=${region}`
+    let url = `${BASE_URL}/api/v1/getregiondata?table=${table}&column=${column}&date=${date}&region=${region}`
 
     let res = await axios.get(url)
     return res.data
