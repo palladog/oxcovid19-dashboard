@@ -1,7 +1,15 @@
 body { 
     margin: 0; 
     padding: 0; 
-    font-family: 'Helvetica Neue', Helvetica, Arial, Sans-serif;
+}
+
+#wrapper {
+    display: flex;
+    flex-wrap: nowrap;
+}
+
+aside {
+    padding: 1em;
 }
 
 #map { 
@@ -13,14 +21,20 @@ body {
 
 
 h1 {
-    font-size: 20px;
+    font-size: 25px;
     line-height: 30px;
 }
 
 h2 {
-    font-size: 14px;
+    font-size: 18px;
     line-height: 20px;
     margin-bottom: 10px;
+}
+
+h1,
+h2 {
+    text-align: center;
+    margin-bottom: 1em;
 }
 
 a {
@@ -34,4 +48,14 @@ a {
     margin: 10px;
     padding: 10px 20px;
     background-color: white;
+}
+
+.form-group > * {
+    display: block;
+}
+
+.form-group select,
+.form-group input {
+    width: 100%;
+    padding: 0.5em 1em;
 }

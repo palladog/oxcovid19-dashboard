@@ -1,83 +1,46 @@
-// THOUGHTS
-// * Might be best to place all the map stuff in functions,
-//   and add the geojson back to the postGis... function. 
-//   If it is, you can add the map functions in a .then() in the axios
-//   fetch so that they can access the geojson object too
-
 mapboxgl.accessToken = mapBoxToken; // From config.js
-var map = new mapboxgl.Map({
-    container: 'map', // container ID
-    style: 'mapbox://styles/mapbox/light-v10', // style URL
-    center: [15, 63], // starting position Sweden [lng, lat]
-    zoom: 4 // starting zoom
-});
 
-let geojson = {
-    // The initial GeoJSON object
+// DOM elements
+const regionSelect = document.getElementById('region-select')
+const dataSelect = document.getElementById('data-select')
+const dateSelect = document.getElementById('date-select')
+
+// Constants
+const dataVariables = [
+    {table: 'epidemiology', column: 'confirmed'},
+    {table: 'epidemiology', column: 'dead'},
+    {table: 'epidemiology', column: 'hospitalised'},
+    {table: 'epidemiology', column: 'hospitalised_icu'},
+    {table: 'epidemiology', column: 'quarantined'},
+    {table: 'epidemiology', column: 'recovered'},
+    {table: 'epidemiology', column: 'tested'}
+]
+
+// Mapbox GL
+var map = new mapboxgl.Map({ // Map initiatization
+    container: 'map', // Container ID
+    style: 'mapbox://styles/mapbox/light-v10', // Style URL
+    center: [23, 63], // Starting position: Sweden
+    zoom: 4 // Starting zoom
+})
+
+let featureCollection = { // The initial map object
     'type': 'FeatureCollection',
     'features': []
-};
-
-function postGISQueryToGeoJSONObject (queryResponse) {
-    // https://gist.github.com/samgiles/2299524
-
-    /* let geojson = {
-        // The initial GeoJSON object
-        'type': 'FeatureCollection',
-        'features': []
-    };*/
-    let prop = null;
-
-    for (let i = 0; i < queryResponse.length; i++) {
-        // For each queryResponse item, create a feature
-        let feature = {
-            'type': 'Feature',
-            'id': i+1,
-            'geometry': queryResponse[i].geometry
-        };
-
-        for (prop in queryResponse[i]) {
-            // For each property in queryResponse, add to GeoJSON object feature as a property
-            if (prop !== 'geometry' && queryResponse[i].hasOwnProperty(prop)) {
-                feature[prop] = queryResponse[i][prop];
-            }
-        }
-
-        // Push the feature into the GeoJSON object feature array
-        geojson.features.push(feature)
-    }
-
-    // Returns the FeatureCollection GeoJSON object
-    return geojson;
 }
 
-axios.get('https://data.splitgraph.com/splitgraph/oxcovid19/latest/-/rest/administrative_division?and=(countrycode.eq.SWE,adm_level.eq.1)&select=country%2Cadm_area_1%2Cgeometry')
-    .then(response => {
-        console.log(response.data);
-
-        let geoJson = postGISQueryToGeoJSONObject(response.data)
-        console.log(geoJson);
-        return geoJson
-    })
-    .catch(error => console.error(error));
-
-/* Hover effect 
-* https://docs.mapbox.com/mapbox-gl-js/example/hover-styles/
-*/
-var hoveredStateId = null;
+let hoveredStateId = null
 
 map.on('load', function () {
-    map.addSource('states', {
-        'type': 'geojson',
-        'data': geojson
-    });
+    map.addSource('regions', {
+        type: 'geojson',
+        data: featureCollection
+    })
 
-    // The feature-state dependent fill-opacity expression will render the hover effect
-    // when a feature's hover state is set to true.
     map.addLayer({
-        'id': 'state-fills',
+        'id': 'region-fills',
         'type': 'fill',
-        'source': 'states',
+        'source': 'regions',
         'layout': {},
         'paint': {
             'fill-color': '#627BC1',
@@ -88,106 +51,239 @@ map.on('load', function () {
                 0.5
             ]
         }
-    });
+    })
 
     map.addLayer({
-        'id': 'state-borders',
+        'id': 'outline',
         'type': 'line',
-        'source': 'states',
+        'source': 'regions',
         'layout': {},
         'paint': {
-            'line-color': '#627BC1',
-            'line-width': 2
+        'line-color': '#000',
+        'line-width': 2
         }
-    });
-
-    // When the user moves their mouse over the state-fill layer, we'll update the
-    // feature state for the feature under the mouse.
-    map.on('mousemove', 'state-fills', function (e) {
-        if (e.features.length > 0) {
-            if (hoveredStateId) {
-                map.setFeatureState(
-                    { source: 'states', id: hoveredStateId },
-                    { hover: false }
-                );
-            }
-            hoveredStateId = e.features[0].id;
-            map.setFeatureState(
-                { source: 'states', id: hoveredStateId },
-                { hover: true }
-            );
-        }
-    });
-
-    // When the mouse leaves the state-fill layer, update the feature state of the
-    // previously hovered feature.
-    map.on('mouseleave', 'state-fills', function () {
-        if (hoveredStateId) {
-            map.setFeatureState(
-                { source: 'states', id: hoveredStateId },
-                { hover: false }
-            );
-        }
-        hoveredStateId = null;
-    });
-});
-
-/* given a query in the form "lng, lat" or "lat, lng" returns the matching
-* geographic coordinate(s) as search results in carmen geojson format,
-* https://github.com/mapbox/carmen/blob/master/carmen-geojson.md
-*/
-var coordinatesGeocoder = function (query) {
-    // match anything which looks like a decimal degrees coordinate pair
-    var matches = query.match(
-    /^[ ]*(?:Lat: )?(-?\d+\.?\d*)[, ]+(?:Lng: )?(-?\d+\.?\d*)[ ]*$/i
-    );
-    if (!matches) {
-        return null;
-    }
-     
-    function coordinateFeature(lng, lat) {
-        return {
-            center: [lng, lat],
-            geometry: {
-                type: 'Point',
-                coordinates: [lng, lat]
-            },
-            place_name: 'Lat: ' + lat + ' Lng: ' + lng,
-            place_type: ['coordinate'],
-            properties: {},
-            type: 'Feature'
-        };
-    }
-        
-    var coord1 = Number(matches[1]);
-    var coord2 = Number(matches[2]);
-    var geocodes = [];
-        
-    if (coord1 < -90 || coord1 > 90) {
-        // must be lng, lat
-        geocodes.push(coordinateFeature(coord1, coord2));
-    }
-        
-    if (coord2 < -90 || coord2 > 90) {
-        // must be lat, lng
-        geocodes.push(coordinateFeature(coord2, coord1));
-    }
-        
-    if (geocodes.length === 0) {
-        // else could be either lng, lat or lat, lng
-        geocodes.push(coordinateFeature(coord1, coord2));
-        geocodes.push(coordinateFeature(coord2, coord1));
-    }
-        
-    return geocodes;
-};
-     
-map.addControl(
-    new MapboxGeocoder({
-        accessToken: mapboxgl.accessToken,
-        localGeocoder: coordinatesGeocoder,
-        zoom: 4,
-        placeholder: 'Try: -40, 170',
-        mapboxgl: mapboxgl
     })
-);
+})
+
+// Form Variables and Parameters
+let country, region, table, column, date, xmin, ymin, xmax, ymax
+let srid = 4326
+
+// Window Onload
+window.onload = function() {
+    country = 'Sweden'
+
+    populateRegionSelect(country)
+
+    // date = new Date().toISOString().slice(0, 10)
+    date = '2021-03-13'
+    document.getElementById('date-select').value = date
+
+    populateDataSelect()
+    table = 'epidemiology'
+    column = 'confirmed'
+    document.getElementById('data-select').value = table + '/' + column
+
+
+    getBoundingBox()
+    let mapData = getMapData()
+    queryResponseToFeatureCollection(mapData)
+    console.log('=== featureCollection ===')
+    console.log(featureCollection)
+}
+
+// Event Listeners
+regionSelect.addEventListener('change', function () {
+    region = this.value
+    getRegionData()
+    renderChart()
+})
+
+dataSelect.addEventListener('change', function () {
+    let string = this.value.split('/')
+    table = string[0]
+    column = string[1]
+
+    let mapData = getMapData()
+    queryResponseToFeatureCollection(mapData)
+    console.log('=== featureCollection ===')
+    console.log(featureCollection)
+})
+
+dateSelect.addEventListener('change', function () {
+    date = this.value
+    console.log(date)
+    
+    let mapData = getMapData()
+    queryResponseToFeatureCollection(mapData)
+    console.log('=== featureCollection ===')
+    console.log(featureCollection)
+})
+
+map.on('moveend', function() {
+    getBoundingBox()
+    let mapData = getMapData()
+    queryResponseToFeatureCollection(mapData)
+    console.log('=== featureCollection ===')
+    console.log(featureCollection)
+})
+
+
+// Populating Select Options
+function populateRegionSelect (country) {
+    let url = `http://localhost:8080/api/v1/getallregions?country=${country}`
+
+    axios.get(url)
+        .then(res => {
+            let options = res.data.map(el => el.adm_area_1)
+
+            // Create a disabled, selected "Choose a region" option
+            let element = document.createElement('option')
+            element.textContent = 'Choose a region...'
+            element.value = ''
+            element.setAttribute('disabled', 'true')
+            element.setAttribute('selected', 'true')
+            regionSelect.appendChild(element)
+
+            // Create an option element for every response object
+            for (let i = 0; i < options.length; i++) {
+                let opt = options[i]
+                let el = document.createElement('option')
+                el.textContent = opt
+                el.value = opt
+                regionSelect.appendChild(el)
+            }
+        })
+        .catch(e => console.error(e))
+}
+
+function populateDataSelect () {
+    const options = dataVariables
+    
+    for (let i = 0; i < options.length; i++) {
+        let opt = options[i].table + '/' + options[i].column
+        let el = document.createElement('option')
+        el.textContent = opt
+        el.value = opt
+        dataSelect.appendChild(el)
+    }
+}
+
+// Bounding Box
+function getBoundingBox () { // Gets the coordinates of the current bounding box
+    let boundingBox = map.getBounds()
+    xmin = parseFloat(boundingBox._sw.lng)
+    ymin = parseFloat(boundingBox._sw.lat)
+    xmax = parseFloat(boundingBox._ne.lng)
+    ymax = parseFloat(boundingBox._ne.lat)
+
+    console.log(`${xmin}, ${ymin}, ${xmax}, ${ymax}`)
+}
+
+async function queryResponseToFeatureCollection (queryResponse) { // Creates a feature for each array object and replaces featureCollection
+    let prop = null;
+
+    for (let i = 0; i < queryResponse.length; i++) {
+        // For each queryResponse item, create a feature
+        let feature = {
+            'type': 'Feature',
+            'id': i+1,
+            'country': queryResponse[i].country,
+            'region': queryResponse[i].adm_area_1,
+            'geometry': queryResponse[i].geometry,
+            'date': queryResponse[i].date,
+            'value': queryResponse[i].value
+        }
+
+        for (prop in queryResponse[i]) {
+            // For each property in queryResponse, add to featureCollection as a property
+            if (prop !== 'geometry' && queryResponse[i].hasOwnProperty(prop)) {
+                feature[prop] = queryResponse[i][prop]
+            }
+        }
+
+        // Push the feature into the featureCollection object feature array
+        featureCollection.features.push(feature)
+    }
+
+    // Returns the featureCollection object
+    return featureCollection
+}
+
+// API Calls
+
+/*async function getBoundingBoxRegions () { // Fetches an array of regions within the current bounding box
+    let url = `http:localhost:8080/api/v1/getboundingbox/?xmin=${xmin}&ymin=${ymin}&xmax=${xmax}&ymax=${ymax}&srid=${srid}`
+
+    axios.get(url)
+        .then(res => {
+            console.log('=== getBoundingBoxRegions response ===')
+            console.log(res.data)
+
+            return res.data
+        }).catch(e => console.error(e))
+}*/
+
+async function getMapData () { // Fetches values of one table column for all regions within the bounding box
+    let url = `http://localhost:8080/api/v1/getmapdata?xmin=${xmin}&ymin=${ymin}&xmax=${xmax}&ymax=${ymax}&srid=${srid}&table=${table}&column=${column}&date=${date}`
+
+    axios.get(url)
+        .then(res => {
+            console.log('==== getMapData response ===')
+            console.log(res.data)
+
+            return res.data
+        }).catch(e => console.error(e))
+}
+
+async function getRegionData () {
+    let url = `http:localhost:8080/api/v1/getregiondata?table=${table}&column=${column}&date=${date}&region=${region}`
+    
+    axios.get(url)
+        .then(res => {
+            console.log('=== getRegionData response ===')
+            console.log(res.data)
+
+            return res.data
+        }).catch(e => console.error(e))
+}
+
+
+function renderChart () {
+    const ctx = document.getElementById('chart').getContext('2d')
+
+    let lineChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Bajs'],
+            datasets: [{
+                label: 'Bajs',
+                data: [3],
+                backgroundColor: ['rgba(255, 99, 132, 0.2)'],
+                borderColor: ['rgba(255, 99, 132, 1)'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    })
+}
+
+
+
+/*axios.get(url)
+    .then(res => {
+        console.log('RESPONSE DATA')
+        console.log(res.data)
+
+        let collection = queryResponseToFeatureCollection(res.data)
+        console.log('COLLECTION OBJECT')
+        console.log(collection)
+    })
+    .catch(e => console.error(e))*/
+
