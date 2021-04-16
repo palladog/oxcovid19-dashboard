@@ -1,10 +1,24 @@
 mapboxgl.accessToken = mapBoxToken; // From config.js
 
-// DOM elements
+// Constants
 const regionSelect = document.getElementById('region-select')
 const dataSelect = document.getElementById('data-select')
+const dataVariables = [
+    { table: 'epidemiology', column: 'confirmed' },
+    { table: 'epidemiology', column: 'dead' },
+    { table: 'epidemiology', column: 'hospitalised' },
+    { table: 'epidemiology', column: 'hospitalised_icu' },
+    { table: 'epidemiology', column: 'quarantined' },
+    { table: 'epidemiology', column: 'recovered' },
+    { table: 'epidemiology', column: 'tested' }
+]
 const dateSelect = document.getElementById('date-select')
 
+// Arguments
+let country, region, table, column, date, xmin, ymin, xmax, ymax
+let srid = 4326
+
+// ChartJS
 let lineChartOpts = {
     type: 'bar',
     data: {
@@ -27,26 +41,15 @@ let lineChartOpts = {
 }
 const lineChart = new Chart(document.getElementById('chart').getContext('2d'), lineChartOpts)
 
-// Constants
-const dataVariables = [
-    { table: 'epidemiology', column: 'confirmed' },
-    { table: 'epidemiology', column: 'dead' },
-    { table: 'epidemiology', column: 'hospitalised' },
-    { table: 'epidemiology', column: 'hospitalised_icu' },
-    { table: 'epidemiology', column: 'quarantined' },
-    { table: 'epidemiology', column: 'recovered' },
-    { table: 'epidemiology', column: 'tested' }
-]
 
-// Mapbox GL
-var map = new mapboxgl.Map({ // Map initiatization
+// Mapbox GL Initialization
+let map = new mapboxgl.Map({ // Map initiatization
     container: 'map', // Container ID
     style: 'mapbox://styles/mapbox/light-v10', // Style URL
     center: [23, 63], // Starting position: Sweden
     zoom: 4 // Starting zoom
 })
 
-// The initial map object
 let featureCollection = {
     'type': 'FeatureCollection',
     'features': []
@@ -88,18 +91,14 @@ map.on('load', function () {
     })
 })
 
-// Form Variables and Parameters
-let country, region, table, column, date, xmin, ymin, xmax, ymax
-let srid = 4326
-
-// Window Onload
+ 
 window.onload = async function () {
-    country = 'Sweden'
+    country = 'Sweden' // Sets Sweden as default country
 
     await populateRegionSelect(country)
 
-    // date = new Date().toISOString().slice(0, 10)
-    date = '2021-03-13'
+    // date = new Date().toISOString().slice(0, 10) // [PRODUCTION]
+    date = '2021-03-13' // [DEVELOPMENT]
     document.getElementById('date-select').value = date
 
     populateDataSelect()
@@ -111,17 +110,16 @@ window.onload = async function () {
     getBoundingBox()
     let mapData = await getMapData()
     queryResponseToFeatureCollection(mapData)
-    console.log('=== featureCollection ===')
-    console.log(featureCollection)
 }
 
-// Event Listeners
+// Renders the chart upon region change
 regionSelect.addEventListener('change', async function () {
     region = this.value
     let data = await getRegionData()
     renderChart()
 })
 
+// Updates the map upon data change
 dataSelect.addEventListener('change', async function () {
     let string = this.value.split('/')
     table = string[0]
@@ -132,6 +130,7 @@ dataSelect.addEventListener('change', async function () {
     // TODO: refresh the chart
 })
 
+// Updates the map upon date change
 dateSelect.addEventListener('change', async function () {
     date = this.value
     console.log(date)
@@ -141,6 +140,7 @@ dateSelect.addEventListener('change', async function () {
     // TODO: refresh the chart
 })
 
+// Updates the map on move
 map.on('moveend', async function () {
     getBoundingBox()
     let mapData = await getMapData()
@@ -148,8 +148,7 @@ map.on('moveend', async function () {
 })
 
 
-// Populating Select Options
-// queries the API to get regions
+// Queries the API to get regions
 async function populateRegionSelect (country) {
     let url = `${BASE_URL}/api/v1/getallregions?country=${country}`
 
@@ -175,6 +174,7 @@ async function populateRegionSelect (country) {
     }
 }
 
+// Populates data select element with options from JS array
 function populateDataSelect () {
     const options = dataVariables
 
@@ -187,15 +187,15 @@ function populateDataSelect () {
     }
 }
 
-// Bounding Box
-function getBoundingBox () { // Gets the coordinates of the current bounding box
+// Gets the coordinates of the current bounding box
+function getBoundingBox () {
     let boundingBox = map.getBounds()
     xmin = parseFloat(boundingBox._sw.lng)
     ymin = parseFloat(boundingBox._sw.lat)
     xmax = parseFloat(boundingBox._ne.lng)
     ymax = parseFloat(boundingBox._ne.lat)
 
-    console.log(`${xmin}, ${ymin}, ${xmax}, ${ymax}`)
+    //console.log(`${xmin}, ${ymin}, ${xmax}, ${ymax}`)
 }
 
 // Creates a feature for each array object and replaces featureCollection
@@ -229,7 +229,27 @@ function queryResponseToFeatureCollection (queryResponse) {
     return featureCollection
 }
 
-// API Calls
+// Fetches values of one table column for all regions within the bounding box
+async function getMapData () {
+    let url = `${BASE_URL}/api/v1/getmapdata?xmin=${xmin}&ymin=${ymin}&xmax=${xmax}&ymax=${ymax}&srid=${srid}&table=${table}&column=${column}&date=${date}`
+    let res = await axios.get(url)
+    return res.data
+}
+
+// Populates the region select element with options from the API
+async function getRegionData () {
+    let url = `${BASE_URL}/api/v1/getregiondata?table=${table}&column=${column}&date=${date}&region=${region}`
+
+    let res = await axios.get(url)
+    return res.data
+}
+
+// 
+function renderChart (data) {
+    console.log('BAJSSSS!')
+    lineChartOpts.data.datasets[0].data = [4]
+    lineChart.update()
+}
 
 /*async function getBoundingBoxRegions () { // Fetches an array of regions within the current bounding box
     let url = `http:localhost:8080/api/v1/getboundingbox/?xmin=${xmin}&ymin=${ymin}&xmax=${xmax}&ymax=${ymax}&srid=${srid}`
@@ -242,28 +262,6 @@ function queryResponseToFeatureCollection (queryResponse) {
             return res.data
         }).catch(e => console.error(e))
 }*/
-
-// Fetches values of one table column for all regions within the bounding box
-async function getMapData () {
-    let url = `${BASE_URL}/api/v1/getmapdata?xmin=${xmin}&ymin=${ymin}&xmax=${xmax}&ymax=${ymax}&srid=${srid}&table=${table}&column=${column}&date=${date}`
-    let res = await axios.get(url)
-    return res.data
-}
-
-async function getRegionData () {
-    let url = `${BASE_URL}/api/v1/getregiondata?table=${table}&column=${column}&date=${date}&region=${region}`
-
-    let res = await axios.get(url)
-    return res.data
-}
-
-
-function renderChart (data) {
-    console.log('BAJSSSS!')
-    lineChartOpts.data.datasets[0].data = [4]
-    lineChart.update()
-}
-
 
 
 /*axios.get(url)
