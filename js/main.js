@@ -128,6 +128,75 @@ map.on('load', function () {
             'line-width': 2
         }
     })
+
+    // Create popup for the hover popup
+    let popup = new mapboxgl.Popup({
+        closeButton: false,
+        closeOnClick: false
+    })
+
+    // When the user moves their mouse over the state-fill layer, we'll update the
+    // feature state for the feature under the mouse.
+    map.on('mousemove', 'region-fills', function (e) {
+        // Region fills on hover
+        if (e.features.length > 0) {
+            if (hoveredRegionId !== null) {
+                map.setFeatureState(
+                    { source: 'regions', id: hoveredRegionId },
+                    { hover: false }
+                )
+            }
+            hoveredRegionId = e.features[0].id;
+
+            map.setFeatureState(
+                { source: 'regions', id: hoveredRegionId },
+                { hover: true }
+            )
+        }
+
+        // Feature module populates on hover
+        //let features = map.queryRenderedFeatures(e.point)
+
+        // Limit the number of properties we're displaying for
+        // legibility and performance
+        /*const displayProperties = [
+            'country',
+            'region',
+            'date',
+            'data',
+            'value'
+        ]
+
+        let displayFeatures = features.map(function (feat) {
+            var displayFeat = {}
+            displayProperties.forEach(function (prop) {
+                displayFeat[prop] = feat[prop];
+            })
+
+            return displayFeat;
+        })
+
+        console.log(displayFeatures)
+
+        document.getElementById('features').innerHTML = JSON.stringify(
+            displayFeatures,
+            null,
+            2
+        )*/
+    })
+
+    // When the mouse leaves the state-fill layer, update the feature state of the
+    // previously hovered feature.
+    map.on('mouseleave', 'region-fills', function () {
+        if (hoveredRegionId !== null) {
+            map.setFeatureState(
+                { source: 'regions', id: hoveredRegionId },
+                { hover: false }
+            )
+        }
+        
+        hoveredRegionId = null;
+    })
 })
 
  
