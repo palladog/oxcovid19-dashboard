@@ -62,9 +62,7 @@ let srid = 4326
     // lineChartOpts.data.datasets.push(set)*/
 //}
 
-// Globals for the choropleth
-let BREAKS = [0, 1000, 5000, 10000, 20000, 50000]
-let COLORS = ['#8c510a', '#d8b365', '#f6e8c3', '#c7eae5', '#5ab4ac', '#01665e']
+
 
 // Mapbox GL Initialization
 let map = new mapboxgl.Map({ // Map initiatization
@@ -81,6 +79,10 @@ let featureCollection = {
 }
 
 let hoveredRegionId = null
+
+// Globals for the choropleth
+let BREAKS = [0, 1000, 5000, 10000, 20000, 50000]
+let COLORS = ['#8c510a', '#d8b365', '#f6e8c3', '#c7eae5', '#5ab4ac', '#01665e']
 
 map.on('load', function () {
     map.addSource('regions', {
