@@ -6,10 +6,19 @@ body {
 #wrapper {
     display: flex;
     flex-wrap: nowrap;
+    height: 100vh;
+    width: 100vh;
+    overflow-x: hidden;
 }
 
 aside {
+    position: absolute;
+    top: 0;
+    right: 0;
     padding: 1em;
+    height: 100vh;
+    z-index: 1000;
+    background-color: #ffffff;
 }
 
 #map { 
@@ -63,10 +72,11 @@ a {
 #features {
     position: absolute;
     top: 0;
-    right: 0;
-    width: 50%;
+    left: 0;
+    width: 300px;
     overflow: auto;
     background: rgba(255, 255, 255, 0.8);
+    text-transform: capitalize;
 }
 
 #map canvas {

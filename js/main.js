@@ -19,12 +19,12 @@ let country, region, table, column, date, xmin, ymin, xmax, ymax
 let srid = 4326
 
 // ChartJS
-/*let lineChartOpts = {
-    type: 'bar',
+let lineChartOpts = {
+    type: 'line',
     data: {
-        labels: ['Chart'],
+        labels: ['Region Chart'],
         datasets: [{
-            label: 'Chart',
+            label: 'Region Chart',
             data: [3],
             backgroundColor: ['rgba(255, 99, 132, 0.2)'],
             borderColor: ['rgba(255, 99, 132, 1)'],
@@ -38,14 +38,37 @@ let srid = 4326
             }
         }
     }
-}*/
-//const lineChart = new Chart(document.getElementById('chart').getContext('2d'), lineChartOpts)
+}
+const lineChart = new Chart(document.getElementById('chart').getContext('2d'), lineChartOpts)
 
-/*function renderChart (data) {
+function renderChart (data) {
     //lineChartOpts.data.datasets[0].data = [4]
+
+    for (let i = 0; i < data.length; i++) {
+
+        // Adds date to line chart labels
+        lineChartOpts.data.labels.push(data[i].date)
+
+        let regionDataObject = {
+            'x': data[i].date,
+            'y': regionData[i].value
+        }
+
+        // Populates the data object
+        for (prop in data[i]) {
+            if (data[i].hasOwnProperty(prop)) {
+                regionDataObject[prop] = data[i][prop]
+            }
+        }
+        
+        // Pushes data object to line chart dataset
+        console.log(regionDataObject)
+        lineChartOpts.data.datasets.data.push(regionDataObject)
+
+    }
     
     lineChart.update()
-}*/
+}
 
 /*function populateLineChart () {
     // lineChartOpts.data.datasets = []
@@ -115,7 +138,7 @@ map.on('load', function () {
             ]
         }
     },
-    'waterway-label'
+    //'waterway-label'
     )
 
     map.addLayer({
@@ -155,7 +178,10 @@ map.on('load', function () {
         }
 
         // Feature module populates on hover
-        //let features = map.queryRenderedFeatures(e.point)
+        let features = map.queryRenderedFeatures(e.point)
+        // console.log(features)
+        let properties = features[0].properties
+        
 
         // Limit the number of properties we're displaying for
         // legibility and performance
@@ -165,24 +191,32 @@ map.on('load', function () {
             'date',
             'data',
             'value'
-        ]
+        ]*/
 
-        let displayFeatures = features.map(function (feat) {
+        /*let displayFeatures = features.map(function (feat) {
             var displayFeat = {}
             displayProperties.forEach(function (prop) {
                 displayFeat[prop] = feat[prop];
             })
 
             return displayFeat;
-        })
+        })*/
 
-        console.log(displayFeatures)
+        // console.log(displayFeatures)
 
-        document.getElementById('features').innerHTML = JSON.stringify(
+        /*document.getElementById('features').innerHTML = JSON.stringify(
             displayFeatures,
             null,
             2
         )*/
+        console.log(properties)
+        console.log(properties.region)
+        
+        document.getElementById('features').innerHTML = `
+            <b>Region: </b> ${properties.region} <br>
+            <b>Date: </b> ${properties.date} <br>
+            <b>${properties.data}: </b> ${properties.value}
+        ` 
     })
 
     // When the mouse leaves the state-fill layer, update the feature state of the
@@ -226,7 +260,7 @@ regionSelect.addEventListener('change', async function () {
     let data = await getRegionData()
     console.log(region)
     populateLineChart()
-    //renderChart()
+    renderChart()
 })
 
 // Updates the map upon data change
@@ -319,12 +353,14 @@ function queryResponseToFeatureCollection (queryResponse) {
         let feature = {
             'type': 'Feature',
             'id': i + 1,
-            'country': queryResponse[i].country,
-            'region': queryResponse[i].adm_area_1,
             'geometry': JSON.parse(queryResponse[i].geometry),
-            'date': queryResponse[i].date,
-            'data': queryResponse[i].data,
-            'value': parseFloat(queryResponse[i].value)
+            'properties': {
+                'country': queryResponse[i].country,
+                'region': queryResponse[i].adm_area_1,
+                'date': queryResponse[i].date,
+                'data': queryResponse[i].data,
+                'value': parseFloat(queryResponse[i].value)
+            }
         }
 
         for (prop in queryResponse[i]) {
