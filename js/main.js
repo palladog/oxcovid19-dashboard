@@ -152,12 +152,6 @@ map.on('load', function () {
         }
     })
 
-    // Create popup for the hover popup
-    let popup = new mapboxgl.Popup({
-        closeButton: false,
-        closeOnClick: false
-    })
-
     // When the user moves their mouse over the state-fill layer, we'll update the
     // feature state for the feature under the mouse.
     map.on('mousemove', 'region-fills', function (e) {
@@ -209,13 +203,11 @@ map.on('load', function () {
             null,
             2
         )*/
-        console.log(properties)
-        console.log(properties.region)
         
         document.getElementById('features').innerHTML = `
             <b>Region: </b> ${properties.region} <br>
             <b>Date: </b> ${properties.date} <br>
-            <b>${properties.data}: </b> ${properties.value}
+            <b>${properties.data}: </b> ${numberWithCommas(properties.value)}
         ` 
     })
 
@@ -232,6 +224,10 @@ map.on('load', function () {
         hoveredRegionId = null;
     })
 })
+
+function numberWithCommas(x) {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
 
  
 window.onload = async function () {
@@ -259,7 +255,6 @@ regionSelect.addEventListener('change', async function () {
     region = this.value
     let data = await getRegionData()
     console.log(region)
-    populateLineChart()
     renderChart()
 })
 
@@ -270,6 +265,7 @@ dataSelect.addEventListener('change', async function () {
     column = string[1]
 
     let mapData = await getMapData()
+    // map.getSource('regions').setSource(queryResponseToFeatureCollection(mapData))
     queryResponseToFeatureCollection(mapData)
     // TODO: refresh the chart
 })
