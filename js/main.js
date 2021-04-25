@@ -22,9 +22,9 @@ let srid = 4326
 /*let lineChartOpts = {
     type: 'bar',
     data: {
-        labels: ['Bajs'],
+        labels: ['Chart'],
         datasets: [{
-            label: 'Bajs',
+            label: 'Chart',
             data: [3],
             backgroundColor: ['rgba(255, 99, 132, 0.2)'],
             borderColor: ['rgba(255, 99, 132, 1)'],
@@ -61,8 +61,6 @@ let srid = 4326
 
     // lineChartOpts.data.datasets.push(set)*/
 //}
-
-
 
 // Mapbox GL Initialization
 let map = new mapboxgl.Map({ // Map initiatization
