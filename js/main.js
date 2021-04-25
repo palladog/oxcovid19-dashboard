@@ -19,7 +19,7 @@ let country, region, table, column, date, xmin, ymin, xmax, ymax
 let srid = 4326
 
 // ChartJS
-let lineChartOpts = {
+/*let lineChartOpts = {
     type: 'bar',
     data: {
         labels: ['Bajs'],
@@ -38,15 +38,40 @@ let lineChartOpts = {
             }
         }
     }
-}
-const lineChart = new Chart(document.getElementById('chart').getContext('2d'), lineChartOpts)
+}*/
+//const lineChart = new Chart(document.getElementById('chart').getContext('2d'), lineChartOpts)
 
+/*function renderChart (data) {
+    //lineChartOpts.data.datasets[0].data = [4]
+    
+    lineChart.update()
+}*/
+
+/*function populateLineChart () {
+    // lineChartOpts.data.datasets = []
+    const selectedRegion = featureCollection.features.filter(obj => {
+        return obj.adm_area_1 === region
+    })
+
+    console.log('SELECTED REGION: ', selectedRegion)
+
+    /*let set = {
+        label: featureCollection
+    }*/
+
+    // lineChartOpts.data.datasets.push(set)*/
+//}
+
+// Globals for the choropleth
+let BREAKS = [0, 1000, 5000, 10000, 20000, 50000]
+let COLORS = ['#8c510a', '#d8b365', '#f6e8c3', '#c7eae5', '#5ab4ac', '#01665e']
 
 // Mapbox GL Initialization
 let map = new mapboxgl.Map({ // Map initiatization
     container: 'map', // Container ID
     style: 'mapbox://styles/mapbox/light-v10', // Style URL
     center: [23, 63], // Starting position: Sweden
+    antialias: true,
     zoom: 4 // Starting zoom
 })
 
@@ -55,7 +80,7 @@ let featureCollection = {
     'features': []
 }
 
-let hoveredStateId = null
+let hoveredRegionId = null
 
 map.on('load', function () {
     map.addSource('regions', {
@@ -67,9 +92,21 @@ map.on('load', function () {
         'id': 'region-fills',
         'type': 'fill',
         'source': 'regions',
-        'layout': {},
+        //'layout': {},
         'paint': {
-            'fill-color': '#627BC1',
+            //'fill-color': '#627BC1',
+            'fill-color': [
+                'interpolate',
+                ['linear'],
+                ['get', 'value'],
+                BREAKS[0], COLORS[0],
+                BREAKS[1], COLORS[1],
+                BREAKS[2], COLORS[2],
+                BREAKS[3], COLORS[3],
+                BREAKS[4], COLORS[4],
+                BREAKS[5], COLORS[5]
+            ],
+            //'fill-outline-color': '#ffffff', NOT WORKING (despite antialias: true)
             'fill-opacity': [
                 'case',
                 ['boolean', ['feature-state', 'hover'], false],
@@ -77,10 +114,12 @@ map.on('load', function () {
                 0.5
             ]
         }
-    })
+    },
+    'waterway-label'
+    )
 
     map.addLayer({
-        'id': 'outline',
+        'id': 'region-borders',
         'type': 'line',
         'source': 'regions',
         'layout': {},
@@ -98,7 +137,7 @@ window.onload = async function () {
     await populateRegionSelect(country)
 
     // date = new Date().toISOString().slice(0, 10) // [PRODUCTION]
-    date = '2021-03-13' // [DEVELOPMENT]
+    date = '2021-04-13' // [DEVELOPMENT]
     document.getElementById('date-select').value = date
 
     populateDataSelect()
@@ -116,7 +155,9 @@ window.onload = async function () {
 regionSelect.addEventListener('change', async function () {
     region = this.value
     let data = await getRegionData()
-    renderChart()
+    console.log(region)
+    populateLineChart()
+    //renderChart()
 })
 
 // Updates the map upon data change
@@ -201,9 +242,11 @@ function getBoundingBox () {
 // Creates a feature for each array object and replaces featureCollection
 function queryResponseToFeatureCollection (queryResponse) {
     let prop = null;
+    featureCollection.features = []
 
     for (let i = 0; i < queryResponse.length; i++) {
         // For each queryResponse item, create a feature
+
         let feature = {
             'type': 'Feature',
             'id': i + 1,
@@ -211,13 +254,18 @@ function queryResponseToFeatureCollection (queryResponse) {
             'region': queryResponse[i].adm_area_1,
             'geometry': JSON.parse(queryResponse[i].geometry),
             'date': queryResponse[i].date,
-            'value': queryResponse[i].value
+            'data': queryResponse[i].data,
+            'value': parseFloat(queryResponse[i].value)
         }
 
         for (prop in queryResponse[i]) {
             // For each property in queryResponse, add to featureCollection as a property
             if (prop !== 'geometry' && queryResponse[i].hasOwnProperty(prop)) {
-                feature[prop] = queryResponse[i][prop]
+                if (prop == 'value') {
+                    feature[prop] = parseFloat(queryResponse[i][prop])
+                } else {
+                    feature[prop] = queryResponse[i][prop]
+                }
             }
         }
 
@@ -226,13 +274,20 @@ function queryResponseToFeatureCollection (queryResponse) {
     }
 
     // Returns the featureCollection object
+    console.log(featureCollection)
     return featureCollection
 }
+
+/*function formatNumber(num) {
+    return parseFloat(num).toFixed(2).replace(/\.00$/, '');
+}*/
 
 // Fetches values of one table column for all regions within the bounding box
 async function getMapData () {
     let url = `${BASE_URL}/api/v1/getmapdata?xmin=${xmin}&ymin=${ymin}&xmax=${xmax}&ymax=${ymax}&srid=${srid}&table=${table}&column=${column}&date=${date}`
+    console.log(url)
     let res = await axios.get(url)
+    console.log(res.data)
     return res.data
 }
 
@@ -242,13 +297,6 @@ async function getRegionData () {
 
     let res = await axios.get(url)
     return res.data
-}
-
-// 
-function renderChart (data) {
-    console.log('BAJSSSS!')
-    lineChartOpts.data.datasets[0].data = [4]
-    lineChart.update()
 }
 
 /*async function getBoundingBoxRegions () { // Fetches an array of regions within the current bounding box

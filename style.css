@@ -59,3 +59,16 @@ a {
     width: 100%;
     padding: 0.5em 1em;
 }
+
+#features {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50%;
+    overflow: auto;
+    background: rgba(255, 255, 255, 0.8);
+}
+
+#map canvas {
+    cursor: crosshair;
+}
