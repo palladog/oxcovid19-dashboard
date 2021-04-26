@@ -245,6 +245,8 @@ dataSelect.addEventListener('change', async function () {
     // map.getSource('regions').setSource(queryResponseToFeatureCollection(mapData))
     queryResponseToFeatureCollection(mapData)
     // TODO: refresh the chart
+    // Updates the map
+    map.getSource('regions').setData(featureCollection)
 })
 
 // Updates the map upon date change
@@ -255,6 +257,9 @@ dateSelect.addEventListener('change', async function () {
     let mapData = await getMapData()
     queryResponseToFeatureCollection(mapData)
     // TODO: refresh the chart
+ 
+    // Updates the map
+    map.getSource('regions').setData(featureCollection)
 })
 
 // Updates the map on move
@@ -350,10 +355,7 @@ function queryResponseToFeatureCollection (queryResponse) {
         // Push the feature into the featureCollection object feature array
         featureCollection.features.push(feature)
     }
-    
-    // Updates the map
-    map.getSource('regions').setData(featureCollection)
-    
+
     console.log(featureCollection)
     return featureCollection
 }
