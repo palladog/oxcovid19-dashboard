@@ -69,14 +69,34 @@ a {
     padding: 0.5em 1em;
 }
 
+#color-values {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 200px;
+    background: rgba(255, 255, 255, 0.7);
+    padding: 0 1em 0.5em 1em;
+}
+
 #features {
     position: absolute;
     top: 0;
     left: 0;
     width: 300px;
     overflow: auto;
-    background: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.7);
     text-transform: capitalize;
+    padding: 0 1em 0.5em 1em;
+    min-height: 150px;
+}
+
+#features-text {
+
+}
+
+#features-text-default {
+    text-transform: normal; 
+    font-style: italic
 }
 
 #map canvas {
