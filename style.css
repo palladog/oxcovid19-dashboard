@@ -91,12 +91,12 @@ a {
 }
 
 #features-text {
-
+    font-size: 1.5rem;
 }
 
 #features-text-default {
-    text-transform: normal; 
-    font-style: italic
+    text-transform: none;
+    font-style: italic;
 }
 
 #map canvas {
