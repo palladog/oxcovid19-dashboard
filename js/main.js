@@ -106,6 +106,11 @@ let BREAKS = [0, 1000, 5000, 10000, 20000, 50000]
 let COLORS = ['#8c510a', '#d8b365', '#f6e8c3', '#c7eae5', '#5ab4ac', '#01665e']
 
 map.on('load', function () {
+
+    document.getElementById('color-values').innerHTML = `
+
+    `
+
     map.addSource('regions', {
         type: 'geojson',
         data: featureCollection
@@ -176,38 +181,10 @@ map.on('load', function () {
         // console.log(features)
         let properties = features[0].properties
         
-
-        // Limit the number of properties we're displaying for
-        // legibility and performance
-        /*const displayProperties = [
-            'country',
-            'region',
-            'date',
-            'data',
-            'value'
-        ]*/
-
-        /*let displayFeatures = features.map(function (feat) {
-            var displayFeat = {}
-            displayProperties.forEach(function (prop) {
-                displayFeat[prop] = feat[prop];
-            })
-
-            return displayFeat;
-        })*/
-
-        // console.log(displayFeatures)
-
-        /*document.getElementById('features').innerHTML = JSON.stringify(
-            displayFeatures,
-            null,
-            2
-        )*/
-        
-        document.getElementById('features').innerHTML = `
-            <b>Region: </b> ${properties.region} <br>
-            <b>Date: </b> ${properties.date} <br>
-            <b>${properties.data}: </b> ${numberWithCommas(properties.value)}
+        document.getElementById('features-text').innerHTML = `
+            <h4>${properties.region}</h4>
+            <p><b>Date: </b> ${properties.date} <br>
+            <b>${properties.data}: </b> ${numberWithCommas(properties.value)}</p>
         ` 
     })
 
@@ -373,8 +350,10 @@ function queryResponseToFeatureCollection (queryResponse) {
         // Push the feature into the featureCollection object feature array
         featureCollection.features.push(feature)
     }
-
-    // Returns the featureCollection object
+    
+    // Updates the map
+    map.getSource('regions').setData(featureCollection)
+    
     console.log(featureCollection)
     return featureCollection
 }
