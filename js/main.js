@@ -103,13 +103,10 @@ let hoveredRegionId = null
 
 // Globals for the choropleth
 let BREAKS = [0, 1000, 5000, 10000, 20000, 50000]
-let COLORS = ['#8c510a', '#d8b365', '#f6e8c3', '#c7eae5', '#5ab4ac', '#01665e']
+//let COLORS = ['#8c510a', '#d8b365', '#f6e8c3', '#c7eae5', '#5ab4ac', '#01665e']
+let COLORS = ['#15607a', '#6f92a4', '#9eb1bc', '#c8b1a9', '#c96f49', '#a63716']
 
 map.on('load', function () {
-
-    document.getElementById('color-values').innerHTML = `
-
-    `
 
     map.addSource('regions', {
         type: 'geojson',
@@ -139,12 +136,61 @@ map.on('load', function () {
                 'case',
                 ['boolean', ['feature-state', 'hover'], false],
                 1,
-                0.5
+                0.9
             ]
         }
     },
     //'waterway-label'
     )
+
+    // Populate the #color-values modal
+    /*let colorValues = document.getElementById('color-values')
+
+    for (let i = 0; i < BREAKS.length; i++) {
+        let stop = BREAKS[i]
+        let color = COLORS[i]
+
+        let item = document.createElement('div');
+        let key = document.createElement('span');
+        key.className = 'legend-key';
+        key.style.backgroundColor = color;
+
+        let value = document.createElement('span');
+        value.innerHTML = stop;
+        item.appendChild(key);
+        item.appendChild(value);
+        console.log(item)
+        colorValues.appendChild(item);
+
+    }*/
+
+
+    document.getElementById('color-values').innerHTML = `
+        <div>
+            <span class="legend-key" style="background-color: ${COLORS[0]}"></span>
+            <span>${BREAKS[0]}</span>
+        </div>
+        <div>
+            <span class="legend-key" style="background-color: ${COLORS[1]}"></span>
+            <span>${BREAKS[1]}</span>
+        </div>
+        <div>
+            <span class="legend-key" style="background-color: ${COLORS[2]}"></span>
+            <span>${BREAKS[2]}</span>
+        </div>
+        <div>
+            <span class="legend-key" style="background-color: ${COLORS[3]}"></span>
+            <span>${BREAKS[3]}</span>
+        </div>
+        <div>
+            <span class="legend-key" style="background-color: ${COLORS[4]}"></span>
+            <span>${BREAKS[4]}</span>
+        </div>
+        <div>
+            <span class="legend-key" style="background-color: ${COLORS[5]}"></span>
+            <span>${BREAKS[5]}</span>
+        </div>
+    `
 
     map.addLayer({
         'id': 'region-borders',
@@ -184,7 +230,7 @@ map.on('load', function () {
         document.getElementById('features-text').innerHTML = `
             <h4>${properties.region}</h4>
             <p><b>Date: </b> ${properties.date} <br>
-            <b>${properties.data}: </b> ${numberWithCommas(properties.value)}</p>
+            <b>${properties.data}: </b> ${numberWithCommas(properties.value)} cases</p>
         ` 
     })
 
